@@ -275,11 +275,11 @@ public class CompassNavigation
     long delay = 1;
     for (String command : getConfig().getStringList("settings." + inventory + slot + ".commands")) {
       final Player temp_p = player;
-      final String temp_c = command.substring(2);  
+      final String temp_c = command;  
       if (command.startsWith("c:")) {
         this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
             public void run() {
-                getServer().dispatchCommand(getServer().getConsoleSender(), replaceModifiers(temp_p, temp_c));    
+                getServer().dispatchCommand(getServer().getConsoleSender(), replaceModifiers(temp_p, temp_c.substring(2)));    
             }
         }, delay);       
       } else {
