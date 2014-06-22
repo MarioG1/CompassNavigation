@@ -37,6 +37,7 @@ public class CompassNavigation
   implements Listener
 {
   public WorldGuardHandler worldGuardHandler;
+  public ProtocolLibHandler protocolLibHandler;
   public VaultHandler vaultHandler;
   public AutoUpdater autoUpdater;
   public EssentialsHandler essentialsHandler;
@@ -48,6 +49,9 @@ public class CompassNavigation
   {
     getConfig().options().copyDefaults(true);
     saveConfig();
+    /*if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+      this.protocolLibHandler = new ProtocolLibHandler(this);
+    }*/
     if (getServer().getPluginManager().isPluginEnabled("Essentials")) {
       this.essentialsHandler = new EssentialsHandler(this);
     }
@@ -146,8 +150,8 @@ public class CompassNavigation
           lore.add(ChatColor.translateAlternateColorCodes('&', replacePlaceholders(getConfig().getString("settings.noPermLore"))));
         }
         ItemStack stack = setLore(setName(new ItemStack(getId(item), getConfig().getInt("settings." + inventory + slot + ".amount", 1), getDamage(item)), name), lore);
-        if (getConfig().getBoolean("settings." + inventory + slot + ".enchanted", false)) {
-          Util.addGlow(stack);
+        if ((this.protocolLibHandler != null) && (getConfig().getBoolean("settings." + inventory + slot + ".enchanted", false))) {
+          stack.addUnsafeEnchantment(Enchantment.WATER_WORKER, 4);
         }
         return Util.removeAttributes(stack);
       }

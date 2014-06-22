@@ -18,18 +18,12 @@ import org.bukkit.inventory.ItemStack;
 public class Util {
     
     public static ItemStack removeAttributes(ItemStack item) {
-        if (!MinecraftReflection.isCraftItemStack(item)) {
-            item = MinecraftReflection.getBukkitItemStack(item);
-        }
-        NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(item);
-        compound.put(NbtFactory.ofList("AttributeModifiers"));
-        return item;
+    if (!MinecraftReflection.isCraftItemStack(item)) {
+        item = MinecraftReflection.getBukkitItemStack(item);
     }
-    
-    public static ItemStack addGlow(ItemStack item) {
-        NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(item);
-	compound.put(NbtFactory.ofList("ench"));
-        return item;
-    }
+    NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(item);
+    compound.put(NbtFactory.ofList("AttributeModifiers"));
+    return item;
+}
     
 }
