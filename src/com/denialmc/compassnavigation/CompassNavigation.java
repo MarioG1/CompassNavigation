@@ -4,22 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Logger;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.FileConfigurationOptions;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -36,10 +28,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.Messenger;
+
+import com.denialmc.compassnavigation.Util;
 
 public class CompassNavigation
   extends JavaPlugin
@@ -58,9 +49,9 @@ public class CompassNavigation
   {
     getConfig().options().copyDefaults(true);
     saveConfig();
-    if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+    /*if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
       this.protocolLibHandler = new ProtocolLibHandler(this);
-    }
+    }*/
     if (getServer().getPluginManager().isPluginEnabled("Essentials")) {
       this.essentialsHandler = new EssentialsHandler(this);
     }
@@ -162,7 +153,7 @@ public class CompassNavigation
         if ((this.protocolLibHandler != null) && (getConfig().getBoolean("settings." + inventory + slot + ".enchanted", false))) {
           stack.addUnsafeEnchantment(Enchantment.WATER_WORKER, 4);
         }
-        return stack;
+        return Util.removeAttributes(stack);
       }
       catch (Exception e)
       {
