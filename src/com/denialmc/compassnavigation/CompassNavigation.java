@@ -277,12 +277,24 @@ public class CompassNavigation
   
   public void executeCommands(Player player, String inventory, int slot)
   {
+    long delay = 1;
     for (String command : getConfig().getStringList("settings." + inventory + slot + ".commands")) {
+      final Player temp_p = player;
+      final String temp_c = command.substring(2);  
       if (command.startsWith("c:")) {
-        getServer().dispatchCommand(getServer().getConsoleSender(), replaceModifiers(player, command.substring(2)));
+        this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+            public void run() {
+                getServer().dispatchCommand(getServer().getConsoleSender(), replaceModifiers(temp_p, temp_c));    
+            }
+        }, delay);       
       } else {
-        getServer().dispatchCommand(player, replaceModifiers(player, command));
+        this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+            public void run() {
+                getServer().dispatchCommand(temp_p, replaceModifiers(temp_p, temp_c));  
+            }
+        }, delay);      
       }
+      delay += getConfig().getLong("settings.commandexecutedelay");
     }
     checkMessages(player, inventory, slot);
   }

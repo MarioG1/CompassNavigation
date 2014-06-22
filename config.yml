@@ -50,6 +50,7 @@ settings:
   warmUp: false
   warmUpTime: 5
   warmUpDistance: 25
+  commandexecutedelay: 20
   signTitle: '&1[Navigation]'
   teleportSound: ENDERMAN_TELEPORT
   noPermSound: ZOMBIE_IDLE
