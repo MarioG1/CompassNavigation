@@ -49,9 +49,9 @@ public class CompassNavigation
   {
     getConfig().options().copyDefaults(true);
     saveConfig();
-    /*if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+    if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
       this.protocolLibHandler = new ProtocolLibHandler(this);
-    }*/
+    }
     if (getServer().getPluginManager().isPluginEnabled("Essentials")) {
       this.essentialsHandler = new EssentialsHandler(this);
     }
@@ -153,7 +153,11 @@ public class CompassNavigation
         if ((this.protocolLibHandler != null) && (getConfig().getBoolean("settings." + inventory + slot + ".enchanted", false))) {
           stack.addUnsafeEnchantment(Enchantment.WATER_WORKER, 4);
         }
-        return Util.removeAttributes(stack);
+        if (this.protocolLibHandler != null) {
+            return Util.removeAttributes(stack);      
+        } else {
+            return stack;
+        }     
       }
       catch (Exception e)
       {
