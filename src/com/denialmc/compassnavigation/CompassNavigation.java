@@ -4,14 +4,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Logger;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.FileConfigurationOptions;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,9 +36,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import com.denialmc.compassnavigation.Util;
+import org.bukkit.plugin.messaging.Messenger;
+import org.bukkit.scheduler.BukkitScheduler;
 
 public class CompassNavigation
   extends JavaPlugin
@@ -103,7 +113,7 @@ public class CompassNavigation
   
   public String replacePlaceholders(String string)
   {
-      return string;
+    return string;
   }
   
   public ItemStack setName(ItemStack item, String name)
@@ -154,10 +164,9 @@ public class CompassNavigation
           stack.addUnsafeEnchantment(Enchantment.WATER_WORKER, 4);
         }
         if (this.protocolLibHandler != null) {
-            return Util.removeAttributes(stack);      
-        } else {
-            return stack;
-        }     
+          return Util.removeAttributes(stack);
+        }
+        return stack;
       }
       catch (Exception e)
       {
@@ -272,22 +281,27 @@ public class CompassNavigation
   
   public void executeCommands(Player player, String inventory, int slot)
   {
-    long delay = 1;
-    for (String command : getConfig().getStringList("settings." + inventory + slot + ".commands")) {
+    long delay = 1L;
+    for (String command : getConfig().getStringList("settings." + inventory + slot + ".commands"))
+    {
       final Player temp_p = player;
-      final String temp_c = command;  
+      final String temp_c = command;
       if (command.startsWith("c:")) {
-        this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-            public void run() {
-                getServer().dispatchCommand(getServer().getConsoleSender(), replaceModifiers(temp_p, temp_c.substring(2)));    
-            }
-        }, delay);       
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable()
+        {
+          public void run()
+          {
+            CompassNavigation.this.getServer().dispatchCommand(CompassNavigation.this.getServer().getConsoleSender(), CompassNavigation.this.replaceModifiers(temp_p, temp_c.substring(2)));
+          }
+        }, delay);
       } else {
-        this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
-            public void run() {
-                getServer().dispatchCommand(temp_p, replaceModifiers(temp_p, temp_c));  
-            }
-        }, delay);      
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable()
+        {
+          public void run()
+          {
+            CompassNavigation.this.getServer().dispatchCommand(temp_p, CompassNavigation.this.replaceModifiers(temp_p, temp_c));
+          }
+        }, delay);
       }
       delay += getConfig().getLong("settings.commandexecutedelay");
     }
@@ -402,8 +416,7 @@ public class CompassNavigation
   public void onPlayerInteract(PlayerInteractEvent event)
   {
     Player player = event.getPlayer();
-    if ((event.hasItem()) && (
-      (event.getAction() == Action.RIGHT_CLICK_AIR) || (event.getAction() == Action.RIGHT_CLICK_BLOCK)))
+    if ((event.hasItem()) && (event.getAction() == Action.RIGHT_CLICK_AIR))
     {
       ItemStack item = event.getItem();
       if (getConfig().contains("settings.items." + item.getTypeId()))
@@ -419,8 +432,27 @@ public class CompassNavigation
         return;
       }
     }
-    if ((event.hasBlock()) && 
-      (event.getAction() == Action.RIGHT_CLICK_BLOCK))
+    else if ((event.hasItem()) && (event.getAction() == Action.RIGHT_CLICK_BLOCK))
+    {
+      Block block = event.getClickedBlock();
+      if ((!(block.getState() instanceof Sign)) || (!event.isCancelled()))
+      {
+        ItemStack item = event.getItem();
+        if (getConfig().contains("settings.items." + item.getTypeId()))
+        {
+          openInventory(player, getConfig().getString("settings.items." + item.getTypeId()));
+          event.setCancelled(true);
+          return;
+        }
+        if (getConfig().contains("settings.items." + item.getTypeId() + ":" + item.getDurability()))
+        {
+          openInventory(player, getConfig().getString("settings.items." + item.getTypeId() + ":" + item.getDurability()));
+          event.setCancelled(true);
+          return;
+        }
+      }
+    }
+    if ((event.hasBlock()) && (event.getAction() == Action.RIGHT_CLICK_BLOCK))
     {
       Block block = event.getClickedBlock();
       if ((block.getState() instanceof Sign))
@@ -480,7 +512,7 @@ public class CompassNavigation
         event.setCancelled(true);
         String inventory = (String)this.inventories.get(player.getName());
         int slot = event.getRawSlot() + 1;
-        if (getConfig().contains("settings." + inventory + slot) && getConfig().getBoolean("settings." + inventory + slot + ".enabled")) {
+        if ((getConfig().contains("settings." + inventory + slot)) && (getConfig().getBoolean("settings." + inventory + slot + ".enabled"))) {
           if (player.hasPermission(new Permission("compassnav." + inventory + slot, PermissionDefault.TRUE)))
           {
             if (getConfig().getBoolean("settings.sounds")) {
@@ -501,8 +533,7 @@ public class CompassNavigation
   public void onPlayerMove(PlayerMoveEvent event)
   {
     Player player = event.getPlayer();
-    if ((this.timers.containsKey(player.getName())) && (
-      (event.getTo().getX() != event.getFrom().getX()) || (event.getTo().getY() != event.getFrom().getY()) || (event.getTo().getZ() != event.getFrom().getZ())))
+    if ((this.timers.containsKey(player.getName())) && ((event.getTo().getX() != event.getFrom().getX()) || (event.getTo().getY() != event.getFrom().getY()) || (event.getTo().getZ() != event.getFrom().getZ())))
     {
       ((WarmupTimer)this.timers.get(player.getName())).cancel();
       this.timers.remove(player.getName());
