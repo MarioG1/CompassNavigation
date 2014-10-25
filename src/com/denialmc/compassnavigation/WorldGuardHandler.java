@@ -61,8 +61,6 @@ public class WorldGuardHandler
         regionManager.setAccessible(true);
         
         GlobalRegionManager globalManager = (GlobalRegionManager)regionManager.get(Bukkit.getServer().getPluginManager().getPlugin("WorldGuard"));
-        
-        globalManager.preload();
       }
       catch (Exception e)
       {
