@@ -4,22 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Logger;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.FileConfigurationOptions;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -36,11 +28,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.messaging.Messenger;
-import org.bukkit.scheduler.BukkitScheduler;
 
 public class CompassNavigation
   extends JavaPlugin
@@ -182,32 +170,39 @@ public class CompassNavigation
   {
     if (getConfig().contains("settings." + name))
     {
-      if (player.hasPermission(new Permission("compassnav." + name, PermissionDefault.TRUE))) {
-        try
-        {
-          Inventory inventory = getServer().createInventory(null, getConfig().getInt("settings." + name + ".rows") * 9, replacePlaceholders(ChatColor.translateAlternateColorCodes('&', getConfig().getString("settings." + name + ".title").replace("<player>", player.getName()))));
-          for (int slot = 0; slot < inventory.getSize() + 1; slot++)
-          {
-            ItemStack item = handleItem(player, name + ".", slot);
-            if (item != null) {
-              inventory.setItem(slot - 1, item);
+        if(!this.inventories.containsKey(player.getName())){
+            if (player.hasPermission(new Permission("compassnav." + name, PermissionDefault.TRUE))) {
+                try
+                {
+                    this.inventories.put(player.getName(), name + ".");
+                    Inventory inventory = getServer().createInventory(null, getConfig().getInt("settings." + name + ".rows") * 9, replacePlaceholders(ChatColor.translateAlternateColorCodes('&', getConfig().getString("settings." + name + ".title").replace("<player>", player.getName()))));
+                    for (int slot = 0; slot < inventory.getSize() + 1; slot++)
+                    {
+                        ItemStack item = handleItem(player, name + ".", slot);
+                        if (item != null) {
+                        inventory.setItem(slot - 1, item);
+                        }
+                    }
+                    if(this.inventories.containsKey(player.getName()))
+                    {
+                        player.openInventory(inventory);
+                    } else {
+                        getLogger().severe("Couldn't open inventory '" + name + "' because the inventory wasn't added to the active Inventories list.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    getLogger().severe("Couldn't open inventory '" + name + "'. This is because of a wrongly set up config.");
+                    getLogger().severe("Technical exception: " + e.getMessage());
+                    getLogger().severe("More info on how to set it up correctly on http://goo.gl/sXdl3A");
+                }
             }
-          }
-          this.inventories.put(player.getName(), name + ".");
-          player.openInventory(inventory);
+        } else {
+            getLogger().severe("Couldn't open inventory '" + name + "' because another inventory is already opened.");
         }
-        catch (Exception e)
-        {
-          getLogger().severe("Couldn't open inventory '" + name + "'. This is because of a wrongly set up config.");
-          getLogger().severe("Technical exception: " + e.getMessage());
-          getLogger().severe("More info on how to set it up correctly on http://goo.gl/sXdl3A");
-        }
-      }
-    }
-    else
-    {
-      getLogger().severe("You do not have the inventory '" + name + "' set up, please set it up in the config.");
-      getLogger().severe("More info on how to set it up on http://goo.gl/sXdl3A");
+    } else {
+        getLogger().severe("You do not have the inventory '" + name + "' set up, please set it up in the config.");
+        getLogger().severe("More info on how to set it up on http://goo.gl/sXdl3A");
     }
   }
   
@@ -435,7 +430,7 @@ public class CompassNavigation
     else if ((event.hasItem()) && (event.getAction() == Action.RIGHT_CLICK_BLOCK))
     {
       Block block = event.getClickedBlock();
-      if ((!(block.getState() instanceof Sign)) || (!event.isCancelled()))
+      if (!(block.getState() instanceof Sign))
       {
         ItemStack item = event.getItem();
         if (getConfig().contains("settings.items." + item.getTypeId()))
@@ -505,7 +500,7 @@ public class CompassNavigation
   public void onInventoryClick(InventoryClickEvent event)
   {
     if ((event.getWhoClicked() instanceof Player))
-    {
+    { 
       Player player = (Player)event.getWhoClicked();
       if (this.inventories.containsKey(player.getName()))
       {
