@@ -6,10 +6,9 @@
 
 package com.denialmc.compassnavigation;
 
-import com.comphenix.protocol.utility.MinecraftReflection;
-import com.comphenix.protocol.wrappers.nbt.NbtCompound;
-import com.comphenix.protocol.wrappers.nbt.NbtFactory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  *
@@ -18,11 +17,10 @@ import org.bukkit.inventory.ItemStack;
 public class Util {
     
     public static ItemStack removeAttributes(ItemStack item) {
-    if (!MinecraftReflection.isCraftItemStack(item)) {
-        item = MinecraftReflection.getBukkitItemStack(item);
-    }
-    NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(item);
-    compound.put(NbtFactory.ofList("AttributeModifiers"));
+        ItemMeta meta = item.getItemMeta();
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        item.setItemMeta(meta);
     return item;
 }
     
